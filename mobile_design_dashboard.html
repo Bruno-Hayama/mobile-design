@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Mobile Design Studio · Dashboard de Mídia Paga</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f0;color:#1a1917;font-size:14px}
+.header{background:#fff;border-bottom:1px solid #e8e5de;padding:14px 28px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.header h1{font-size:16px;font-weight:600}.header .sub{font-size:11px;color:#6b6760;margin-top:2px}
+.live{display:flex;align-items:center;gap:6px;font-size:11px;color:#6b6760}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#16a34a;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.tabs-bar{background:#fff;border-bottom:1px solid #e8e5de;padding:0 28px;display:flex}
+.tab-btn{padding:11px 18px;font-size:13px;font-weight:500;color:#6b6760;border:none;background:none;cursor:pointer;border-bottom:2.5px solid transparent;display:flex;align-items:center;gap:6px}
+.tab-btn.active{color:#1a1917;border-bottom-color:#1a1917}
+.pdot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.meta-dot{background:#1877f2}.google-dot{background:#4285f4}
+.tab-content{display:none}.tab-content.active{display:flex;min-height:calc(100vh - 93px)}
+.sidebar{width:260px;flex-shrink:0;background:#fff;border-right:1px solid #e8e5de;padding:16px;overflow-y:auto}
+.main{flex:1;padding:20px;overflow-y:auto}
+.sl{font-size:10px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:18px}
+.kpi{background:#fff;border:1px solid #e8e5de;border-radius:8px;padding:13px 14px}
+.kpi.g{border-top:3px solid #4285f4}.kpi.m{border-top:3px solid #1877f2}
+.kpi-label{font-size:10px;color:#6b6760;margin-bottom:5px}
+.kpi-val{font-size:20px;font-weight:600}.kpi-sub{font-size:10px;color:#9ca3af;margin-top:2px}
+.cc{border:1px solid #e8e5de;border-radius:8px;padding:10px 12px;margin-bottom:7px;cursor:pointer;transition:border-color .15s}
+.cc:hover{border-color:#bbb}.cc.sel{border-color:#333;background:#fafaf9}
+.cc-h{display:flex;gap:7px;align-items:flex-start}
+.cc-stripe{width:4px;min-height:32px;border-radius:2px;flex-shrink:0}
+.cc-n{font-size:11.5px;font-weight:500;line-height:1.4}
+.cc-c{font-size:10px;color:#6b6760;margin-top:2px}
+.cc-f{display:flex;justify-content:space-between;align-items:center;margin-top:7px;padding-top:6px;border-top:1px solid #f0ede8}
+.cc-s{font-size:13px;font-weight:600}
+.badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:500}
+.ba{background:#dcfce7;color:#15803d}.bp{background:#f1f5f9;color:#64748b}
+.notice{font-size:10px;background:#fef9ec;border:1px solid #f5d25a;border-radius:6px;padding:8px 10px;margin-bottom:8px;color:#7a5c10;line-height:1.5}
+.chart-card{background:#fff;border:1px solid #e8e5de;border-radius:8px;padding:16px;margin-bottom:16px}
+.cc-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.cc-hdr h3{font-size:13px;font-weight:600}
+.pills{display:flex;gap:4px;flex-wrap:wrap}
+.pill{padding:3px 10px;font-size:11px;border:1px solid #e8e5de;border-radius:20px;cursor:pointer;background:#fff;color:#6b6760}
+.pill.active{background:#1a1917;color:#fff;border-color:#1a1917}
+.leg-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#6b6760;cursor:pointer}
+.leg-sw{width:10px;height:10px;border-radius:2px}
+.chart-wrap{position:relative;width:100%;height:255px}
+.table-card{background:#fff;border:1px solid #e8e5de;border-radius:8px;overflow:hidden;margin-bottom:16px}
+.tc-hdr{padding:13px 16px;border-bottom:1px solid #e8e5de;font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.tbl-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:11.5px}
+th{background:#fafaf9;font-weight:500;color:#6b6760;text-align:right;padding:8px 11px;border-bottom:1px solid #e8e5de;white-space:nowrap;font-size:11px}
+th:first-child{text-align:left}
+td{text-align:right;padding:8px 11px;border-bottom:1px solid #f0ede8}
+td:first-child{text-align:left}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafaf9}
+.tdc{display:flex;align-items:center;gap:7px}
+.tdc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.tdc-n{font-weight:500;font-size:11px}
+.tdc-s{font-size:10px;color:#6b6760}
+.note{font-size:10px;color:#9ca3af;padding:9px 16px;border-top:1px solid #e8e5de;background:#fafaf9}
+.dr-bar{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.dr-btn{padding:3px 9px;font-size:11px;border:1px solid #e8e5de;border-radius:20px;background:#fff;color:#6b6760;cursor:pointer;white-space:nowrap}
+.dr-btn.active{background:#1a1917;color:#fff;border-color:#1a1917;font-weight:500}
+.dr-sep{width:1px;height:14px;background:#e8e5de;flex-shrink:0}
+.dr-custom{display:flex;align-items:center;gap:4px}
+.dr-inp{padding:3px 7px;font-size:11px;border:1px solid #e8e5de;border-radius:6px;background:#fff;color:#1a1917;outline:none}
+.dr-apply{padding:3px 10px;font-size:11px;border:1px solid #1a1917;border-radius:6px;background:#1a1917;color:#fff;cursor:pointer}
+.section-div{height:1px;background:#e8e5de;margin:16px 0}
+@media(max-width:860px){.kpi-grid{grid-template-columns:repeat(3,1fr)}.tab-content.active{flex-direction:column}.sidebar{width:100%;border-right:none;border-bottom:1px solid #e8e5de}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Mobile Design Studio · Dashboard de Mídia Paga</h1>
+    <div class="sub">Google Ads: 03 mar 2026 – 31 mai 2026 &nbsp;·&nbsp; Meta Ads: todo o período disponível</div>
+  </div>
+  <div class="live"><span class="live-dot"></span>Dados atualizados via API e Google Sheets</div>
+</div>
+
+<div class="tabs-bar">
+  <button class="tab-btn active" id="btn-google" onclick="switchTab('google',this)">
+    <span class="pdot google-dot"></span> Google Ads
+  </button>
+  <button class="tab-btn" id="btn-meta" onclick="switchTab('meta',this)">
+    <span class="pdot meta-dot"></span> Meta Ads
+  </button>
+</div>
+
+<!-- GOOGLE TAB -->
+<div class="tab-content active" id="tab-google">
+  <div class="sidebar">
+    <div class="sl">Campanhas Google Ads</div>
+    <div class="notice">⚠ A campanha <strong>[SC][BC]</strong> era unificada (Balneário Camboriú + Florianópolis) até 26/05/2026. A partir de 27/05 foi separada em duas: <strong>[SC][BC]</strong> e <strong>[SC][FLN]</strong>. Os dados anteriores a 27/05 pertencem à campanha original unificada.</div>
+    <div id="gSidebar"></div>
+  </div>
+  <div class="main">
+    <div class="kpi-grid" id="gKpis"></div>
+    <div class="chart-card">
+      <div class="cc-hdr"><h3>Evolução diária — Google Ads</h3><div class="pills" id="gPills"></div></div>
+      <div class="leg-row" id="gLeg"></div>
+      <div class="chart-wrap"><canvas id="gChart"></canvas></div>
+    </div>
+    <div class="table-card">
+      <div class="tc-hdr"><span>Resumo por campanha · Google Ads</span><div class="dr-bar" id="gDRBar"></div></div>
+      <div class="tbl-scroll"><table id="gTable"></table></div>
+      <div class="note">Conversões = leads rastreados pelo Google Ads (formulário/ligação). CPA = custo por lead. ⚠ [SC][BC] até 26/05 inclui Florianópolis.</div>
+    </div>
+  </div>
+</div>
+
+<!-- META TAB -->
+<div class="tab-content" id="tab-meta">
+  <div class="sidebar">
+    <div class="sl">Campanhas Meta [CLAUDE]</div>
+    <div id="mSidebar"></div>
+  </div>
+  <div class="main">
+    <div class="kpi-grid" id="mKpis"></div>
+    <div class="chart-card">
+      <div class="cc-hdr"><h3>Evolução diária — Meta Ads</h3><div class="pills" id="mPills"></div></div>
+      <div class="leg-row" id="mLeg"></div>
+      <div class="chart-wrap"><canvas id="mChart"></canvas></div>
+    </div>
+    <div class="table-card">
+      <div class="tc-hdr"><span>Resumo por campanha · Meta Ads [CLAUDE]</span><div class="dr-bar" id="mDRBar"></div></div>
+      <div class="tbl-scroll"><table id="mTable"></table></div>
+      <div class="note">Dados Meta: período total desde criação das campanhas. Conversões = leads via formulário nativo.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── UTILS ────────────────────────────────────────────────────
+function fR(v,d=2){return Number(v).toFixed(d)}
+function fBRL(v){return'R$'+Number(v).toFixed(2).replace('.',',')}
+function fN(v){return Math.round(Number(v)).toLocaleString('pt-BR')}
+function fP(v){return Number(v).toFixed(2).replace('.',',')+' %'}
+function fLbl(d){const p=d.split('-');return p[2]+'/'+p[1]}
+function switchTab(id,btn){
+  document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(e=>e.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='meta'&&!mChartBuilt){buildMChart();mChartBuilt=true;}
+}
+
+// ── GOOGLE ADS DATA ───────────────────────────────────────────
+// Campaigns
+// c1 = [SC][BC] HERMAN MILLER (até 26/05 = BC+FLN unificado)
+// c2 = [PR] HERMAN MILLER
+// c3 = [MT/SC] HERMAN MILLER
+// c4 = [MS/PR] HERMAN MILLER
+// c5 = [SC][FLN] HERMAN MILLER (a partir de 27/05 — nova)
+
+const GC=[
+  {id:'c1',short:'SC · Balneário Camboriú (+ FLN até 26/05)',cat:'Pesquisa · Leads Herman Miller',color:'#2563eb',note:'⚠ Incluía Florianópolis até 26/05',split:true},
+  {id:'c2',short:'PR · Paraná',cat:'Pesquisa · Leads Herman Miller',color:'#16a34a',note:null,split:false},
+  {id:'c3',short:'MT/SC · Mato Grosso e Santa Catarina',cat:'Pesquisa · Leads Herman Miller',color:'#ea580c',note:null,split:false},
+  {id:'c4',short:'MS/PR · Mato Grosso do Sul e Paraná',cat:'Pesquisa · Leads Herman Miller',color:'#7c3aed',note:null,split:false},
+  {id:'c5',short:'SC · Florianópolis (nova a partir de 27/05)',cat:'Pesquisa · Leads Herman Miller',color:'#db2777',note:'🆕 Separada de [SC][BC] em 27/05/2026',split:true},
+];
+
+// Totals from spreadsheet (Últimos 3 meses)
+const G_TOTALS={
+  c1:{spend:3983.17,clicks:834,impr:7169,conv:83,ctr:11.63,cpc:4.78,cpa:47.99},
+  c2:{spend:3547.25,clicks:713,impr:9853,conv:58,ctr:7.24,cpc:4.98,cpa:61.16},
+  c3:{spend:913.46,clicks:198,impr:1475,conv:19,ctr:13.42,cpc:4.61,cpa:48.08},
+  c4:{spend:910.48,clicks:199,impr:1243,conv:10,ctr:16.01,cpc:4.58,cpa:91.05},
+  c5:{spend:57.13,clicks:6,impr:79,conv:0,ctr:7.59,cpc:9.52,cpa:0},
+};
+
+// Daily data — built from spreadsheet Dados Diários
+const GD_RAW=[
+  // Format: [date, campId, cost, clicks, impr, ctr, cpc, conv, taxa, cpa]
+  ['2026-03-03','c1',105.81,18,77,23.38,5.88,3,16.67,35.27],
+  ['2026-03-04','c1',102.85,16,86,18.60,6.43,2,12.50,51.42],
+  ['2026-03-05','c1',85.73,12,117,10.26,7.14,3,25.00,28.58],
+  ['2026-03-05','c2',25.78,6,45,13.33,4.30,1,16.67,25.78],
+  ['2026-03-05','c3',16.37,3,8,37.50,5.46,0,0,0],
+  ['2026-03-05','c4',6.25,2,21,9.52,3.13,0,0,0],
+  ['2026-03-06','c1',58.20,16,106,15.09,3.64,0,0,0],
+  ['2026-03-06','c2',26.09,8,82,9.76,3.26,1,12.50,26.09],
+  ['2026-03-06','c3',15.62,4,22,18.18,3.90,0,0,0],
+  ['2026-03-06','c4',25.33,4,15,26.67,6.33,0,0,0],
+  ['2026-03-07','c1',55.03,10,55,18.18,5.50,0,0,0],
+  ['2026-03-07','c2',35.27,4,89,4.49,8.82,0,0,0],
+  ['2026-03-07','c3',7.84,1,27,3.70,7.84,0,0,0],
+  ['2026-03-07','c4',12.68,3,24,12.50,4.23,0,0,0],
+  ['2026-03-08','c1',46.71,13,50,26.00,3.59,0,0,0],
+  ['2026-03-08','c2',36.27,13,75,17.33,2.79,0,0,0],
+  ['2026-03-08','c3',29.82,4,32,12.50,7.46,0,0,0],
+  ['2026-03-08','c4',8.69,2,18,11.11,4.34,0,0,0],
+  ['2026-03-09','c1',45.65,12,33,36.36,3.80,4,33.33,11.41],
+  ['2026-03-09','c2',30.43,16,108,14.81,1.90,2,12.50,15.21],
+  ['2026-03-09','c3',19.41,3,12,25.00,6.47,1,33.33,19.41],
+  ['2026-03-09','c4',29.98,7,12,58.33,4.28,0,0,0],
+  ['2026-03-10','c1',50.55,20,61,32.79,2.53,0,0,0],
+  ['2026-03-10','c2',27.61,6,77,7.79,4.60,0,0,0],
+  ['2026-03-10','c3',8.36,2,58,3.45,4.18,0,0,0],
+  ['2026-03-10','c4',17.53,2,10,20.00,8.77,0,0,0],
+  ['2026-03-11','c1',48.93,19,66,28.79,2.58,2,10.53,24.46],
+  ['2026-03-11','c2',25.46,10,90,11.11,2.55,2,20.00,12.73],
+  ['2026-03-11','c3',17.36,3,27,11.11,5.79,0,0,0],
+  ['2026-03-11','c4',15.11,5,19,26.32,3.02,0,0,0],
+  ['2026-03-12','c1',51.57,19,77,24.68,2.71,2,10.53,25.78],
+  ['2026-03-12','c2',23.29,7,95,7.37,3.33,1,14.29,23.29],
+  ['2026-03-12','c3',20.03,5,27,18.52,4.01,1,20.00,20.03],
+  ['2026-03-12','c4',13.88,5,22,22.73,2.78,0,0,0],
+  ['2026-03-13','c1',48.37,18,102,17.65,2.69,1,5.56,48.37],
+  ['2026-03-13','c2',19.04,9,155,5.81,2.12,0,0,0],
+  ['2026-03-13','c3',12.07,3,18,16.67,4.02,0,0,0],
+  ['2026-03-13','c4',14.93,5,26,19.23,2.99,0,0,0],
+  ['2026-03-14','c1',33.45,11,52,21.15,3.04,1,9.09,33.45],
+  ['2026-03-14','c2',27.40,12,165,7.27,2.28,0,0,0],
+  ['2026-03-14','c3',12.79,3,31,9.68,4.26,0,0,0],
+  ['2026-03-14','c4',9.32,3,26,11.54,3.11,1,33.33,9.32],
+  ['2026-03-15','c1',42.65,14,99,14.14,3.05,0,0,0],
+  ['2026-03-15','c2',20.10,8,107,7.48,2.51,0,0,0],
+  ['2026-03-15','c3',16.68,5,18,27.78,3.34,1,20.00,16.68],
+  ['2026-03-15','c4',17.80,4,27,14.81,4.45,0,0,0],
+  ['2026-03-16','c1',46.44,15,110,13.64,3.10,0,0,0],
+  ['2026-03-16','c2',24.50,10,150,6.67,2.45,0,0,0],
+  ['2026-03-16','c3',12.68,5,37,13.51,2.54,0,0,0],
+  ['2026-03-16','c4',6.25,2,14,14.29,3.13,0,0,0],
+  ['2026-03-17','c1',41.63,23,102,22.55,1.81,1,4.35,41.63],
+  ['2026-03-17','c2',25.99,8,31,25.81,3.25,2,25.00,12.99],
+  ['2026-03-17','c3',3.77,2,30,6.67,1.89,0,0,0],
+  ['2026-03-17','c4',12.85,5,22,22.73,2.57,1,20.00,12.85],
+  ['2026-03-18','c1',37.69,16,130,12.31,2.36,0,0,0],
+  ['2026-03-18','c2',10.14,6,105,5.71,1.69,1,16.67,10.14],
+  ['2026-03-18','c3',19.51,7,38,18.42,2.79,1,14.29,19.51],
+  ['2026-03-18','c4',11.15,3,32,9.38,3.72,0,0,0],
+  ['2026-03-19','c1',25.62,12,101,11.88,2.13,0,0,0],
+  ['2026-03-19','c2',16.41,10,109,9.17,1.64,1,10.00,16.41],
+  ['2026-03-19','c3',16.82,6,45,13.33,2.80,0,0,0],
+  ['2026-03-19','c4',13.07,4,27,14.81,3.27,0,0,0],
+  ['2026-03-20','c1',24.28,13,104,12.50,1.87,1,7.69,24.28],
+  ['2026-03-20','c2',38.11,15,149,10.07,2.54,0,0,0],
+  ['2026-03-20','c3',19.48,7,32,21.88,2.78,1,14.29,19.48],
+  ['2026-03-20','c4',24.46,6,25,24.00,4.08,1,16.67,24.46],
+  ['2026-03-21','c1',13.98,10,90,11.11,1.40,1,10.00,13.98],
+  ['2026-03-21','c2',28.81,13,125,10.40,2.22,1,7.69,28.81],
+  ['2026-03-21','c3',14.31,6,26,23.08,2.38,1,16.67,14.31],
+  ['2026-03-21','c4',3.24,1,27,3.70,3.24,0,0,0],
+  ['2026-03-22','c1',28.58,13,102,12.75,2.20,1,7.69,28.58],
+  ['2026-03-22','c2',37.84,12,105,11.43,3.15,1,8.33,37.84],
+  ['2026-03-22','c3',3.85,2,23,8.70,1.93,0,0,0],
+  ['2026-03-22','c4',8.65,3,10,30.00,2.88,0,0,0],
+  ['2026-03-23','c1',69.77,18,112,16.07,3.88,3,16.67,23.26],
+  ['2026-03-23','c2',33.49,15,146,10.27,2.23,2,13.33,16.74],
+  ['2026-03-23','c3',25.36,9,46,19.57,2.82,0,0,0],
+  ['2026-03-23','c4',27.27,9,36,25.00,3.03,0,0,0],
+  ['2026-03-24','c1',47.75,11,78,14.10,4.34,2,18.18,23.87],
+  ['2026-03-24','c2',41.12,13,115,11.30,3.16,0,0,0],
+  ['2026-03-24','c3',12.42,4,28,14.29,3.11,0,0,0],
+  ['2026-03-24','c4',23.59,6,23,26.09,3.93,1,16.67,23.59],
+  ['2026-03-25','c1',37.48,11,63,17.46,3.41,4,36.36,9.37],
+  ['2026-03-25','c2',34.41,11,105,10.48,3.13,1,9.09,34.41],
+  ['2026-03-25','c3',15.39,5,45,11.11,3.08,0,0,0],
+  ['2026-03-25','c4',16.86,5,17,29.41,3.37,0,0,0],
+  ['2026-03-26','c1',36.17,17,55,30.91,2.13,2,11.76,18.09],
+  ['2026-03-26','c2',39.02,17,138,12.32,2.30,2,11.76,19.51],
+  ['2026-03-26','c3',6.44,3,26,11.54,2.15,0,0,0],
+  ['2026-03-26','c4',5.23,2,11,18.18,2.62,0,0,0],
+  ['2026-03-27','c1',45.85,21,80,26.25,2.18,2,9.52,22.93],
+  ['2026-03-27','c2',26.79,13,81,16.05,2.06,0,0,0],
+  ['2026-03-27','c3',12.07,5,32,15.63,2.41,0,0,0],
+  ['2026-03-27','c4',9.64,3,17,17.65,3.21,0,0,0],
+  ['2026-03-28','c1',44.50,15,135,11.11,2.97,1,6.67,44.50],
+  ['2026-03-28','c2',37.17,13,89,14.61,2.86,0,0,0],
+  ['2026-03-28','c3',10.67,3,11,27.27,3.56,1,33.33,10.67],
+  ['2026-03-28','c4',1.76,1,6,16.67,1.76,1,100.00,1.76],
+  ['2026-03-29','c1',47.11,16,123,13.01,2.94,1,6.25,47.11],
+  ['2026-03-29','c2',35.92,16,100,16.00,2.25,2,12.50,17.96],
+  ['2026-03-29','c3',6.96,3,18,16.67,2.32,0,0,0],
+  ['2026-03-29','c4',19.82,7,28,25.00,2.83,0,0,0],
+  ['2026-03-30','c1',44.32,15,64,23.44,2.95,2,13.33,22.16],
+  ['2026-03-30','c2',33.98,15,124,12.10,2.27,2,13.33,16.99],
+  ['2026-03-30','c3',11.89,4,21,19.05,2.97,1,25.00,11.89],
+  ['2026-03-30','c4',10.49,3,20,15.00,3.50,0,0,0],
+  ['2026-03-31','c1',41.72,16,101,15.84,2.61,1,6.25,41.72],
+  ['2026-03-31','c2',28.07,14,168,8.33,2.00,1,7.14,28.07],
+  ['2026-03-31','c3',4.34,2,27,7.41,2.17,0,0,0],
+  ['2026-03-31','c4',6.51,2,25,8.00,3.25,0,0,0],
+  ['2026-04-01','c1',55.06,14,73,19.18,3.93,6,42.86,9.18],
+  ['2026-04-01','c2',36.90,12,145,8.28,3.07,0,0,0],
+  ['2026-04-01','c3',12.02,3,6,50.00,4.01,0,0,0],
+  ['2026-04-01','c4',11.12,3,5,60.00,3.71,0,0,0],
+  ['2026-04-02','c1',43.71,17,130,13.08,2.57,2,11.76,21.85],
+  ['2026-04-02','c2',23.13,8,155,5.16,2.89,1,12.50,23.13],
+  ['2026-04-02','c3',9.15,3,42,7.14,3.05,0,0,0],
+  ['2026-04-02','c4',10.63,2,15,13.33,5.32,0,0,0],
+  ['2026-04-03','c1',45.52,13,98,13.27,3.50,0,0,0],
+  ['2026-04-03','c2',51.34,13,116,11.21,3.95,1,7.69,51.34],
+  ['2026-04-03','c3',10.15,4,23,17.39,2.54,0,0,0],
+  ['2026-04-03','c4',15.58,5,18,27.78,3.12,0,0,0],
+  ['2026-04-04','c1',52.03,15,95,15.79,3.47,1,6.67,52.03],
+  ['2026-04-04','c2',37.10,10,81,12.35,3.71,0,0,0],
+  ['2026-04-04','c3',13.14,5,16,31.25,2.63,0,0,0],
+  ['2026-04-04','c4',13.85,4,7,57.14,3.46,1,25.00,13.85],
+  ['2026-04-05','c1',33.07,10,79,12.66,3.31,0,0,0],
+  ['2026-04-05','c2',39.68,13,110,11.82,3.05,1,7.69,39.68],
+  ['2026-04-05','c3',1.61,1,13,7.69,1.61,1,100.00,1.61],
+  ['2026-04-05','c4',4.97,2,12,16.67,2.48,0,0,0],
+  ['2026-04-06','c1',42.81,13,94,13.83,3.29,2,15.38,21.41],
+  ['2026-04-06','c2',33.08,12,93,12.90,2.76,2,16.67,16.54],
+  ['2026-04-06','c3',18.11,5,31,16.13,3.62,0,0,0],
+  ['2026-04-06','c4',12.04,5,24,20.83,2.41,0,0,0],
+  ['2026-04-07','c1',11.65,4,112,3.57,2.91,0,0,0],
+  ['2026-04-07','c2',32.19,8,120,6.67,4.02,1,12.50,32.19],
+  ['2026-04-07','c3',2.80,1,16,6.25,2.80,0,0,0],
+  ['2026-04-07','c4',6.24,2,9,22.22,3.12,0,0,0],
+  ['2026-04-08','c1',6.22,2,77,2.60,3.11,0,0,0],
+  ['2026-04-08','c2',22.53,5,103,4.85,4.51,0,0,0],
+  ['2026-04-08','c4',1.09,1,10,10.00,1.09,0,0,0],
+  ['2026-04-09','c1',75.78,8,109,7.34,9.47,3,37.50,25.26],
+  ['2026-04-09','c2',48.24,6,99,6.06,8.04,0,0,0],
+  ['2026-04-09','c3',18.31,4,29,13.79,4.58,2,50.00,9.15],
+  ['2026-04-09','c4',5.80,1,29,3.45,5.80,0,0,0],
+  ['2026-04-10','c1',54.31,10,101,9.90,5.43,0,0,0],
+  ['2026-04-10','c2',29.82,8,152,5.26,3.73,4,50.00,7.46],
+  ['2026-04-10','c3',19.97,4,23,17.39,4.99,0,0,0],
+  ['2026-04-10','c4',19.79,3,24,12.50,6.60,0,0,0],
+  ['2026-04-11','c1',32.17,5,68,7.35,6.43,1,20.00,32.17],
+  ['2026-04-11','c2',26.26,6,71,8.45,4.38,0,0,0],
+  ['2026-04-11','c3',7.92,1,9,11.11,7.92,0,0,0],
+  ['2026-04-11','c4',13.05,2,15,13.33,6.52,0,0,0],
+  ['2026-04-12','c1',15.92,4,68,5.88,3.98,0,0,0],
+  ['2026-04-12','c2',5.92,2,51,3.92,2.96,0,0,0],
+  ['2026-04-12','c4',9.97,1,2,50.00,9.97,0,0,0],
+  ['2026-04-13','c1',52.52,8,126,6.35,6.57,2,25.00,26.26],
+  ['2026-04-13','c2',47.28,8,146,5.48,5.91,1,12.50,47.28],
+  ['2026-04-13','c3',19.72,3,32,9.38,6.57,0,0,0],
+  ['2026-04-13','c4',14.55,1,7,14.29,14.55,0,0,0],
+  ['2026-04-14','c1',83.70,9,120,7.50,9.30,0,0,0],
+  ['2026-04-14','c2',48.82,7,162,4.32,6.97,0,0,0],
+  ['2026-04-14','c4',10.69,2,6,33.33,5.34,0,0,0],
+  ['2026-04-15','c1',71.20,9,81,11.11,7.91,1,11.11,71.20],
+  ['2026-04-15','c2',110.10,7,151,4.64,15.73,0,0,0],
+  ['2026-04-15','c3',19.93,1,27,3.70,19.93,0,0,0],
+  ['2026-04-15','c4',4.66,1,8,12.50,4.66,1,100.00,4.66],
+  ['2026-04-16','c1',26.23,5,108,4.63,5.25,0,0,0],
+  ['2026-04-16','c2',99.73,7,123,5.69,14.25,0,0,0],
+  ['2026-04-16','c3',17.22,2,16,12.50,8.61,0,0,0],
+  ['2026-04-17','c1',49.88,8,94,8.51,6.24,0,0,0],
+  ['2026-04-17','c2',64.06,6,88,6.82,10.68,0,0,0],
+  ['2026-04-17','c3',11.28,2,10,20.00,5.64,0,0,0],
+  ['2026-04-18','c1',25.74,4,85,4.71,6.43,0,0,0],
+  ['2026-04-18','c2',45.34,6,159,3.77,7.56,0,0,0],
+  ['2026-04-18','c3',12.76,2,21,9.52,6.38,0,0,0],
+  ['2026-04-18','c4',19.39,2,11,18.18,9.69,0,0,0],
+  ['2026-04-19','c1',19.78,3,70,4.29,6.59,1,33.33,19.78],
+  ['2026-04-19','c2',3.82,1,87,1.15,3.82,0,0,0],
+  ['2026-04-20','c1',96.02,8,99,8.08,12.00,2,25.00,48.01],
+  ['2026-04-20','c2',65.27,5,70,7.14,13.05,3,60.00,21.76],
+  ['2026-04-20','c3',6.05,1,29,3.45,6.05,0,0,0],
+  ['2026-04-20','c4',19.21,1,6,16.67,19.21,0,0,0],
+  ['2026-04-21','c1',68.49,8,93,8.60,8.56,0,0,0],
+  ['2026-04-21','c2',34.89,6,127,4.72,5.82,0,0,0],
+  ['2026-04-21','c3',13.66,2,12,16.67,6.83,0,0,0],
+  ['2026-04-22','c1',52.18,7,109,6.42,7.45,0,0,0],
+  ['2026-04-22','c2',21.80,4,138,2.90,5.45,1,25.00,21.80],
+  ['2026-04-22','c4',18.80,2,26,7.69,9.40,0,0,0],
+  ['2026-04-23','c1',35.64,5,129,3.88,7.13,0,0,0],
+  ['2026-04-23','c2',99.61,12,157,7.64,8.30,0,0,0],
+  ['2026-04-23','c3',14.61,1,32,3.13,14.61,0,0,0],
+  ['2026-04-23','c4',22.52,2,15,13.33,11.26,0,0,0],
+  ['2026-04-24','c1',47.83,5,153,3.27,9.57,2,40.00,23.92],
+  ['2026-04-24','c2',55.57,7,145,4.83,7.94,0,0,0],
+  ['2026-04-24','c3',16.41,1,5,20.00,16.41,0,0,0],
+  ['2026-04-24','c4',15.26,1,35,2.86,15.26,0,0,0],
+  ['2026-04-25','c1',76.54,6,65,9.23,12.76,0,0,0],
+  ['2026-04-25','c2',30.38,5,107,4.67,6.08,0,0,0],
+  ['2026-04-25','c4',9.83,1,8,12.50,9.83,0,0,0],
+  ['2026-04-26','c1',47.36,4,77,5.19,11.84,2,50.00,23.68],
+  ['2026-04-26','c2',64.04,6,81,7.41,10.67,0,0,0],
+  ['2026-04-26','c4',13.26,2,4,50.00,6.63,0,0,0],
+  ['2026-04-27','c1',61.53,7,73,9.59,8.79,2,28.57,30.77],
+  ['2026-04-27','c2',75.57,9,169,5.33,8.40,3,33.33,25.19],
+  ['2026-04-27','c3',19.60,2,7,28.57,9.80,0,0,0],
+  ['2026-04-27','c4',8.89,3,3,100.00,2.96,2,66.67,4.45],
+  ['2026-04-28','c1',44.81,5,34,14.71,8.96,0,0,0],
+  ['2026-04-28','c2',51.82,6,59,10.17,8.64,3,50.00,17.27],
+  ['2026-04-28','c3',18.92,1,5,20.00,18.92,0,0,0],
+  ['2026-04-28','c4',8.88,2,15,13.33,4.44,0,0,0],
+  ['2026-04-29','c1',43.42,5,48,10.42,8.68,1,20.00,43.42],
+  ['2026-04-29','c2',46.32,5,66,7.58,9.26,0,0,0],
+  ['2026-04-29','c3',9.67,1,3,33.33,9.67,0,0,0],
+  ['2026-04-29','c4',8.34,1,4,25.00,8.34,0,0,0],
+  ['2026-04-30','c1',40.16,4,36,11.11,10.04,0,0,0],
+  ['2026-04-30','c2',43.86,9,102,8.82,4.87,1,11.11,43.86],
+  ['2026-04-30','c3',6.33,1,11,9.09,6.33,2,200.00,3.17],
+  ['2026-04-30','c4',6.59,1,4,25.00,6.59,0,0,0],
+  ['2026-05-01','c1',45.47,3,22,13.64,15.16,0,0,0],
+  ['2026-05-01','c2',55.46,6,91,6.59,9.24,2,33.33,27.73],
+  ['2026-05-01','c3',10.04,2,3,66.67,5.02,0,0,0],
+  ['2026-05-01','c4',9.35,1,20,5.00,9.35,0,0,0],
+  ['2026-05-02','c1',40.57,6,47,12.77,6.76,0,0,0],
+  ['2026-05-02','c2',55.55,9,93,9.68,6.17,0,0,0],
+  ['2026-05-02','c3',10.31,1,5,20.00,10.31,0,0,0],
+  ['2026-05-03','c1',41.71,6,42,14.29,6.95,0,0,0],
+  ['2026-05-03','c2',24.24,5,87,5.75,4.85,0,0,0],
+  ['2026-05-03','c3',8.67,2,2,100.00,4.33,0,0,0],
+  ['2026-05-03','c4',14.53,2,5,40.00,7.26,0,0,0],
+  ['2026-05-04','c1',53.22,8,71,11.27,6.65,0,0,0],
+  ['2026-05-04','c2',61.92,6,161,3.73,10.32,0,0,0],
+  ['2026-05-04','c3',8.01,1,4,25.00,8.01,0,0,0],
+  ['2026-05-04','c4',7.72,2,20,10.00,3.86,1,50.00,7.72],
+  ['2026-05-05','c1',49.59,6,75,8.00,8.27,0,0,0],
+  ['2026-05-05','c2',17.46,2,158,1.27,8.73,0,0,0],
+  ['2026-05-05','c3',8.73,1,9,11.11,8.73,0,0,0],
+  ['2026-05-05','c4',12.80,3,7,42.86,4.27,0,0,0],
+  ['2026-05-06','c1',50.02,7,82,8.54,7.15,3,42.86,16.67],
+  ['2026-05-06','c2',94.40,12,134,8.96,7.87,0,0,0],
+  ['2026-05-06','c4',7.98,2,13,15.38,3.99,0,0,0],
+  ['2026-05-07','c1',60.14,10,81,12.35,6.01,0,0,0],
+  ['2026-05-07','c2',53.02,9,132,6.82,5.89,0,0,0],
+  ['2026-05-07','c3',12.72,2,4,50.00,6.36,0,0,0],
+  ['2026-05-07','c4',7.83,1,5,20.00,7.83,0,0,0],
+  ['2026-05-08','c1',24.16,5,87,5.75,4.83,2,40.00,12.08],
+  ['2026-05-08','c2',37.60,8,136,5.88,4.70,0,0,0],
+  ['2026-05-08','c3',5.39,1,7,14.29,5.39,0,0,0],
+  ['2026-05-08','c4',11.34,2,24,8.33,5.67,0,0,0],
+  ['2026-05-09','c1',27.95,5,28,17.86,5.59,2,40.00,13.98],
+  ['2026-05-09','c2',41.49,4,53,7.55,10.37,2,50.00,20.75],
+  ['2026-05-09','c3',4.76,1,22,4.55,4.76,1,100.00,4.76],
+  ['2026-05-09','c4',4.69,2,13,15.38,2.35,0,0,0],
+  ['2026-05-10','c1',26.67,8,74,10.81,3.33,0,0,0],
+  ['2026-05-10','c2',23.99,5,95,5.26,4.80,0,0,0],
+  ['2026-05-10','c3',22.06,2,2,100.00,11.03,2,100.00,11.03],
+  ['2026-05-10','c4',2.44,1,16,6.25,2.44,0,0,0],
+  ['2026-05-11','c1',12.06,3,73,4.11,4.02,0,0,0],
+  ['2026-05-11','c2',56.63,9,130,6.92,6.29,1,11.11,56.63],
+  ['2026-05-11','c3',7.54,1,2,50.00,7.54,0,0,0],
+  ['2026-05-11','c4',3.66,2,21,9.52,1.83,0,0,0],
+  ['2026-05-12','c1',40.53,5,120,4.17,8.11,0,0,0],
+  ['2026-05-12','c2',29.66,5,110,4.55,5.93,1,20.00,29.66],
+  ['2026-05-12','c3',7.11,1,18,5.56,7.11,0,0,0],
+  ['2026-05-12','c4',4.31,1,7,14.29,4.31,0,0,0],
+  ['2026-05-13','c1',63.15,8,102,7.84,7.89,0,0,0],
+  ['2026-05-13','c2',30.02,4,134,2.99,7.50,0,0,0],
+  ['2026-05-13','c3',10.32,2,11,18.18,5.16,2,100.00,5.16],
+  ['2026-05-13','c4',4.72,1,14,7.14,4.72,0,0,0],
+  ['2026-05-14','c1',83.71,9,104,8.65,9.30,0,0,0],
+  ['2026-05-14','c2',27.75,5,182,2.75,5.55,0,0,0],
+  ['2026-05-14','c4',1.88,1,27,3.70,1.88,0,0,0],
+  ['2026-05-15','c1',34.76,6,49,12.24,5.79,0,0,0],
+  ['2026-05-15','c2',87.70,10,182,5.49,8.77,1,10.00,87.70],
+  ['2026-05-15','c3',15.03,2,11,18.18,7.51,1,50.00,15.03],
+  ['2026-05-15','c4',15.68,3,11,27.27,5.23,0,0,0],
+  ['2026-05-16','c1',2.07,1,47,2.13,2.07,0,0,0],
+  ['2026-05-16','c2',60.45,8,116,6.90,7.56,0,0,0],
+  ['2026-05-16','c3',7.98,2,4,50.00,3.99,0,0,0],
+  ['2026-05-16','c4',3.98,1,21,4.76,3.98,0,0,0],
+  ['2026-05-17','c1',72.03,7,96,7.29,10.29,1,14.29,72.03],
+  ['2026-05-17','c2',42.69,6,77,7.79,7.12,0,0,0],
+  ['2026-05-17','c4',6.21,1,9,11.11,6.21,0,0,0],
+  ['2026-05-18','c1',68.80,8,112,7.14,8.60,1,12.50,68.80],
+  ['2026-05-18','c2',71.81,8,141,5.67,8.98,2,25.00,35.91],
+  ['2026-05-18','c3',2.25,1,39,2.56,2.25,0,0,0],
+  ['2026-05-18','c4',15.83,2,25,8.00,7.92,0,0,0],
+  ['2026-05-19','c1',45.14,7,62,11.29,6.45,1,14.29,45.14],
+  ['2026-05-19','c2',63.47,7,156,4.49,9.07,2,28.57,31.73],
+  ['2026-05-19','c3',6.72,1,31,3.23,6.72,0,0,0],
+  ['2026-05-19','c4',15.74,3,19,15.79,5.25,0,0,0],
+  ['2026-05-20','c1',40.94,4,46,8.70,10.23,0,0,0],
+  ['2026-05-20','c2',46.76,6,70,8.57,7.79,0,0,0],
+  ['2026-05-20','c3',15.52,1,6,16.67,15.52,0,0,0],
+  ['2026-05-20','c4',13.43,1,7,14.29,13.43,0,0,0],
+  ['2026-05-21','c1',39.94,6,58,10.34,6.66,1,16.67,39.94],
+  ['2026-05-21','c2',46.48,8,78,10.26,5.81,0,0,0],
+  ['2026-05-21','c3',15.65,1,5,20.00,15.65,0,0,0],
+  ['2026-05-21','c4',9.34,1,13,7.69,9.34,0,0,0],
+  ['2026-05-22','c1',36.04,8,88,9.09,4.50,2,25.00,18.02],
+  ['2026-05-22','c2',37.99,8,147,5.44,4.75,2,25.00,19.00],
+  ['2026-05-22','c3',7.59,1,2,50.00,7.59,0,0,0],
+  ['2026-05-23','c1',29.94,7,54,12.96,4.28,0,0,0],
+  ['2026-05-23','c2',32.65,5,62,8.06,6.53,0,0,0],
+  ['2026-05-23','c4',12.01,2,9,22.22,6.00,0,0,0],
+  ['2026-05-24','c1',12.13,2,44,4.55,6.07,0,0,0],
+  ['2026-05-24','c2',19.27,4,103,3.88,4.82,0,0,0],
+  ['2026-05-24','c3',15.28,2,12,16.67,7.64,0,0,0],
+  ['2026-05-24','c4',5.27,1,6,16.67,5.27,0,0,0],
+  ['2026-05-25','c1',66.28,9,111,8.11,7.36,0,0,0],
+  ['2026-05-25','c2',37.06,5,138,3.62,7.41,0,0,0],
+  ['2026-05-25','c3',7.72,2,4,50.00,3.86,0,0,0],
+  ['2026-05-25','c4',11.99,1,11,9.09,11.99,0,0,0],
+  ['2026-05-26','c1',44.66,6,76,7.89,7.44,0,0,0],
+  ['2026-05-26','c2',71.37,12,153,7.84,5.95,0,0,0],
+  ['2026-05-26','c3',6.73,2,23,8.70,3.37,0,0,0],
+  ['2026-05-26','c4',9.00,2,21,9.52,4.50,0,0,0],
+  // [SC][FLN] nova campanha a partir de 27/05
+  ['2026-05-27','c5',0.05,1,17,5.88,0.05,0,0,0],
+  ['2026-05-27','c1',19.51,4,61,6.56,4.88,0,0,0],
+  ['2026-05-27','c2',52.27,9,119,7.56,5.81,0,0,0],
+  ['2026-05-27','c3',8.34,1,4,25.00,8.34,0,0,0],
+  ['2026-05-27','c4',8.47,1,1,100.00,8.47,0,0,0],
+  ['2026-05-28','c5',19.11,1,26,3.85,19.11,0,0,0],
+  ['2026-05-28','c1',9.59,2,15,13.33,4.79,0,0,0],
+  ['2026-05-28','c2',5.35,1,85,1.18,5.35,0,0,0],
+  ['2026-05-28','c3',4.52,2,33,6.06,2.26,0,0,0],
+  ['2026-05-28','c4',8.01,1,6,16.67,8.01,0,0,0],
+  ['2026-05-29','c5',24.76,3,31,9.68,8.25,0,0,0],
+  ['2026-05-29','c1',22.72,3,7,42.86,7.57,2,66.67,11.36],
+  ['2026-05-29','c2',35.30,4,82,4.88,8.83,0,0,0],
+  ['2026-05-29','c3',6.18,2,5,40.00,3.09,0,0,0],
+  ['2026-05-29','c4',4.93,1,10,10.00,4.93,0,0,0],
+  ['2026-05-30','c2',44.46,4,87,4.60,11.12,0,0,0],
+  ['2026-05-30','c3',6.64,1,24,4.17,6.64,0,0,0],
+  ['2026-05-31','c5',13.21,1,5,20.00,13.21,0,0,0],
+];
+
+// Build daily map
+const GD={};
+GC.forEach(c=>GD[c.id]=[]);
+GD_RAW.forEach(r=>{
+  const [d,id,s,cl,i,ctr,cpc,conv,taxa,cpa]=r;
+  GD[id].push({d,s,cl,i,ctr,cpc,conv,taxa,cpa});
+});
+
+
+// ── META DAILY DATA (auto-updated by GitHub Actions) ─────────
+const MD_M1=[];
+const MD_M2=[];
+const MD_M3=[];
+
+// ── META ADS DATA (campanhas [CLAUDE]) ────────────────────────
+const MC=[
+  {id:'m1',name:'[13H][LEADS][FORMULÁRIO NATIVO][PR][TESTE][CLAUDE] COPA',short:'PR · Formulário Nativo [CLAUDE]',cat:'Leads · Formulário Nativo · Paraná',color:'#16a34a',status:'ACTIVE',spend:233.19,imp:7002,reach:3617,freq:1.94,cpm:33.30,ctr:1.67,cpc:1.99,clicks:117,lc:97,cplc:2.40},
+  {id:'m2',name:'[13H][LEADS][FORMULÁRIO NATIVO][SC-BC][TESTE][CLAUDE] COPA',short:'SC-BC · Formulário Nativo [CLAUDE]',cat:'Leads · Formulário Nativo · Balneário Camboriú',color:'#2563eb',status:'ACTIVE',spend:191.63,imp:4753,reach:2401,freq:1.98,cpm:40.32,ctr:1.62,cpc:2.49,clicks:77,lc:62,cplc:3.09},
+  {id:'m3',name:'[13H][LEADS][FORMULÁRIO NATIVO][SC-FLN][TESTE][CLAUDE] COPA',short:'SC-FLN · Formulário Nativo [CLAUDE]',cat:'Leads · Formulário Nativo · Florianópolis',color:'#db2777',status:'ACTIVE',spend:42.26,imp:677,reach:280,freq:2.42,cpm:62.42,ctr:0.44,cpc:14.09,clicks:3,lc:2,cplc:21.13},
+];
+// Meta has no daily data available via API for this account yet — show summary only
+const MD={m1:MD_M1,m2:MD_M2,m3:MD_M3};
+
+// ── GOOGLE ADS LOGIC ──────────────────────────────────────────
+const GM=[
+  {k:'s',l:'Gasto',f:fBRL},{k:'i',l:'Impressões',f:fN},{k:'cl',l:'Cliques',f:fN},
+  {k:'ctr',l:'CTR',f:fP},{k:'cpc',l:'CPC',f:fBRL},{k:'conv',l:'Conversões',f:v=>fR(v,0)},
+  {k:'taxa',l:'Taxa Conv.',f:fP},{k:'cpa',l:'CPA',f:v=>v>0?fBRL(v):'—'},
+];
+let gAM='s', gChart=null, gVis=new Set(GC.map(c=>c.id));
+let gDRPreset='all', gDRFrom='', gDRTo='';
+
+function drCutoff(p){
+  const t=new Date('2026-05-31');
+  if(p==='1d') return t.toISOString().slice(0,10);
+  const d=new Date(t);
+  if(p==='7d'){d.setDate(d.getDate()-6);return d.toISOString().slice(0,10);}
+  if(p==='14d'){d.setDate(d.getDate()-13);return d.toISOString().slice(0,10);}
+  if(p==='30d'){d.setDate(d.getDate()-29);return d.toISOString().slice(0,10);}
+  if(p==='90d'){d.setDate(d.getDate()-89);return d.toISOString().slice(0,10);}
+  return '2026-03-03';
+}
+function filterD(days,from,to){return days.filter(d=>d.d>=from&&d.d<=to);}
+function gRange(){return gDRPreset==='custom'?{from:gDRFrom,to:gDRTo}:{from:drCutoff(gDRPreset),to:'2026-05-31'};}
+
+function gKpis(){
+  const all=GC.flatMap(c=>GD[c.id]);
+  const sp=all.reduce((a,d)=>a+d.s,0);
+  const cl=all.reduce((a,d)=>a+d.cl,0);
+  const im=all.reduce((a,d)=>a+d.i,0);
+  const cv=all.reduce((a,d)=>a+d.conv,0);
+  document.getElementById('gKpis').innerHTML=[
+    {l:'Investimento Google',v:fBRL(sp),s:'período total'},
+    {l:'Impressões',v:(im/1000).toFixed(0)+'K',s:'total'},
+    {l:'Cliques',v:fN(cl),s:'total'},
+    {l:'Conversões (leads)',v:fN(cv),s:'total'},
+    {l:'CTR médio',v:fP(cl/im*100),s:'geral'},
+    {l:'CPA médio',v:fBRL(sp/cv),s:'custo/lead'},
+  ].map(k=>`<div class="kpi g"><div class="kpi-label">${k.l}</div><div class="kpi-val">${k.v}</div><div class="kpi-sub">${k.s}</div></div>`).join('');
+}
+
+function gSidebar(){
+  document.getElementById('gSidebar').innerHTML=GC.map(c=>{
+    const days=GD[c.id]; const sp=days.reduce((a,d)=>a+d.s,0);
+    const cv=days.reduce((a,d)=>a+d.conv,0);
+    return`<div class="cc ${gVis.has(c.id)?'sel':''}" onclick="gToggle('${c.id}')">
+      <div class="cc-h"><div class="cc-stripe" style="background:${c.color}"></div>
+      <div><div class="cc-n">${c.short}</div><div class="cc-c">${c.cat}</div>
+      ${c.note?`<div style="font-size:9px;color:#7c3aed;margin-top:2px">${c.note}</div>`:''}</div></div>
+      <div class="cc-f"><div class="cc-s">${fBRL(sp)}</div>
+      <span style="font-size:10px;color:#6b6760">${fN(cv)} leads</span></div>
+    </div>`;
+  }).join('');
+}
+function gToggle(id){
+  if(gVis.has(id)&&gVis.size===1)return;
+  gVis.has(id)?gVis.delete(id):gVis.add(id);
+  gSidebar();gLeg();buildGChart();
+}
+function gPills(){
+  document.getElementById('gPills').innerHTML=GM.map(m=>`<button class="pill ${m.k===gAM?'active':''}" onclick="setGM('${m.k}')">${m.l}</button>`).join('');
+}
+function setGM(k){gAM=k;gPills();buildGChart();}
+function gLeg(){
+  document.getElementById('gLeg').innerHTML=GC.filter(c=>gVis.has(c.id)).map(c=>`
+    <div class="leg-item" onclick="gToggle('${c.id}')"><div class="leg-sw" style="background:${c.color}"></div>${c.short}</div>`).join('');
+}
+function buildGChart(){
+  const allD=new Set();GC.forEach(c=>GD[c.id].forEach(d=>allD.add(d.d)));
+  const dates=[...allD].sort();
+  const met=GM.find(m=>m.k===gAM);
+  const ds=GC.filter(c=>gVis.has(c.id)&&GD[c.id].length).map(c=>{
+    const mp={};GD[c.id].forEach(d=>mp[d.d]=d);
+    return{label:c.short,data:dates.map(d=>mp[d]?mp[d][gAM]:null),borderColor:c.color,backgroundColor:c.color+'18',borderWidth:2,pointRadius:1.5,tension:.3,spanGaps:false,fill:false};
+  });
+  if(gChart)gChart.destroy();
+  gChart=new Chart(document.getElementById('gChart'),{type:'line',data:{labels:dates.map(fLbl),datasets:ds},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.raw!=null?ctx.dataset.label+': '+met.f(ctx.raw):null}}},scales:{x:{ticks:{font:{size:10},maxRotation:45,autoSkip:true,maxTicksLimit:22},grid:{color:'rgba(0,0,0,.04)'}},y:{ticks:{font:{size:10},callback:v=>met.f(v)},grid:{color:'rgba(0,0,0,.04)'}}}}});
+}
+
+function buildGDRBar(){
+  const presets=[{k:'1d',l:'Hoje'},{k:'7d',l:'7 dias'},{k:'14d',l:'14 dias'},{k:'30d',l:'30 dias'},{k:'90d',l:'3 meses'},{k:'all',l:'Todo período'}];
+  let h=presets.map(p=>`<button class="dr-btn ${gDRPreset===p.k&&gDRPreset!=='custom'?'active':''}" onclick="setGDR('${p.k}')">${p.l}</button>`).join('');
+  h+=`<span class="dr-sep"></span><div class="dr-custom">
+    <input type="date" class="dr-inp" id="gDrFrom" value="${gDRFrom||'2026-03-03'}" min="2026-03-03" max="2026-05-31">
+    <span style="font-size:11px;color:#9ca3af">a</span>
+    <input type="date" class="dr-inp" id="gDrTo" value="${gDRTo||'2026-05-31'}" min="2026-03-03" max="2026-05-31">
+    <button class="dr-apply" onclick="applyGDR()">Aplicar</button>
+  </div>`;
+  document.getElementById('gDRBar').innerHTML=h;
+}
+function setGDR(k){gDRPreset=k;gDRFrom='';gDRTo='';buildGDRBar();gTable();}
+function applyGDR(){
+  gDRFrom=document.getElementById('gDrFrom').value;
+  gDRTo=document.getElementById('gDrTo').value;
+  if(gDRFrom&&gDRTo&&gDRFrom<=gDRTo){gDRPreset='custom';buildGDRBar();gTable();}
+}
+
+function gTable(){
+  buildGDRBar();
+  const range=gRange();
+  const cols=['Campanha','Gasto','Cliques','Impressões','CTR','CPC Méd.','Conversões','Taxa Conv.','CPA'];
+  let h=`<thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>`;
+  let tSp=0,tCl=0,tIm=0,tCv=0;
+  GC.forEach(c=>{
+    const fd=filterD(GD[c.id],range.from,range.to);
+    const sp=fd.reduce((a,d)=>a+d.s,0);
+    const cl=fd.reduce((a,d)=>a+d.cl,0);
+    const im=fd.reduce((a,d)=>a+d.i,0);
+    const cv=fd.reduce((a,d)=>a+d.conv,0);
+    const ctr=im>0?cl/im*100:0;
+    const cpc=cl>0?sp/cl:0;
+    const taxa=cl>0?cv/cl*100:0;
+    const cpa=cv>0?sp/cv:0;
+    tSp+=sp;tCl+=cl;tIm+=im;tCv+=cv;
+    const noteBadge=c.note?`<span style="font-size:9px;background:#f3f0ff;color:#7c3aed;border-radius:3px;padding:1px 5px;margin-left:4px">${c.split?'divisão':'nova'}</span>`:'';
+    h+=`<tr>
+      <td><div class="tdc"><div class="tdc-dot" style="background:${c.color}"></div>
+      <div><div class="tdc-n">${c.short}${noteBadge}</div><div class="tdc-s">${c.cat}</div></div></div></td>
+      <td>${fBRL(sp)}</td><td>${fN(cl)}</td><td>${fN(im)}</td>
+      <td>${fP(ctr)}</td><td>${fBRL(cpc)}</td>
+      <td>${fN(cv)}</td><td>${fP(taxa)}</td><td>${cv>0?fBRL(cpa):'—'}</td></tr>`;
+  });
+  // Total row
+  const tCtr=tIm>0?tCl/tIm*100:0;
+  const tCpc=tCl>0?tSp/tCl:0;
+  const tTaxa=tCl>0?tCv/tCl*100:0;
+  const tCpa=tCv>0?tSp/tCv:0;
+  h+=`<tr style="background:#f0ede8;font-weight:600">
+    <td>TOTAL</td><td>${fBRL(tSp)}</td><td>${fN(tCl)}</td><td>${fN(tIm)}</td>
+    <td>${fP(tCtr)}</td><td>${fBRL(tCpc)}</td><td>${fN(tCv)}</td><td>${fP(tTaxa)}</td><td>${tCv>0?fBRL(tCpa):'—'}</td>
+  </tr>`;
+  document.getElementById('gTable').innerHTML=h+'</tbody>';
+}
+
+// ── META ADS LOGIC ────────────────────────────────────────────
+const MM=[
+  {k:'spend',l:'Gasto',f:fBRL},{k:'imp',l:'Impressões',f:fN},{k:'reach',l:'Alcance',f:fN},
+  {k:'freq',l:'Freq.',f:v=>fR(v)},{k:'cpm',l:'CPM',f:fBRL},{k:'ctr',l:'CTR',f:fP},
+  {k:'cpc',l:'CPC',f:fBRL},{k:'clicks',l:'Cliques',f:fN},{k:'lc',l:'Link Clicks',f:fN},
+];
+let mAM='spend', mChart=null, mVis=new Set(MC.map(c=>c.id)), mChartBuilt=false;
+
+function mKpis(){
+  const ts=MC.reduce((a,c)=>a+c.spend,0);
+  const ti=MC.reduce((a,c)=>a+c.imp,0);
+  const tc=MC.reduce((a,c)=>a+c.clicks,0);
+  const tl=MC.reduce((a,c)=>a+c.lc,0);
+  document.getElementById('mKpis').innerHTML=[
+    {l:'Investimento Meta [CLAUDE]',v:fBRL(ts),s:'período total'},
+    {l:'Impressões',v:(ti/1000).toFixed(1)+'K',s:'total'},
+    {l:'Cliques',v:fN(tc),s:'total'},
+    {l:'Link Clicks',v:fN(tl),s:'total'},
+    {l:'CTR médio',v:fP(tc/ti*100),s:'geral'},
+    {l:'CPM médio',v:fBRL(ts/ti*1000),s:'geral'},
+  ].map(k=>`<div class="kpi m"><div class="kpi-label">${k.l}</div><div class="kpi-val">${k.v}</div><div class="kpi-sub">${k.s}</div></div>`).join('');
+}
+
+function mSidebar(){
+  document.getElementById('mSidebar').innerHTML=MC.map(c=>`
+    <div class="cc ${mVis.has(c.id)?'sel':''}" onclick="mToggle('${c.id}')">
+      <div class="cc-h"><div class="cc-stripe" style="background:${c.color}"></div>
+      <div><div class="cc-n">${c.short}</div><div class="cc-c">${c.cat}</div></div></div>
+      <div class="cc-f"><div class="cc-s">${fBRL(c.spend)}</div>
+      <span class="badge ${c.status==='ACTIVE'?'ba':'bp'}">${c.status==='ACTIVE'?'ativa':'pausada'}</span></div>
+    </div>`).join('');
+}
+function mToggle(id){
+  if(mVis.has(id)&&mVis.size===1)return;
+  mVis.has(id)?mVis.delete(id):mVis.add(id);
+  mSidebar();buildMChart();
+}
+function mPills(){
+  document.getElementById('mPills').innerHTML=MM.map(m=>`<button class="pill ${m.k===mAM?'active':''}" onclick="setMM('${m.k}')">${m.l}</button>`).join('');
+}
+function setMM(k){mAM=k;mPills();buildMChart();}
+
+function buildMChart(){
+  // No daily data for Meta — show bar chart of totals
+  const vis=MC.filter(c=>mVis.has(c.id));
+  const met=MM.find(m=>m.k===mAM);
+  const labels=vis.map(c=>c.short);
+  const vals=vis.map(c=>c[mAM]||0);
+  const colors=vis.map(c=>c.color);
+  if(mChart)mChart.destroy();
+  mChart=new Chart(document.getElementById('mChart'),{
+    type:'bar',
+    data:{labels,datasets:[{label:met.l,data:vals,backgroundColor:colors.map(c=>c+'cc'),borderColor:colors,borderWidth:1.5,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>met.l+': '+met.f(ctx.raw)}}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:10},callback:v=>met.f(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
+  });
+  mChartBuilt=true;
+}
+
+function buildMDRBar(){
+  document.getElementById('mDRBar').innerHTML=`<span style="font-size:11px;color:#9ca3af">Dados Meta: período total desde criação</span>`;
+}
+
+function mTable(){
+  buildMDRBar();
+  const cols=['Campanha','Status','Gasto','Impressões','Alcance','Freq.','CPM','CTR','CPC','Cliques','Link Clicks','Custo/LC'];
+  let h=`<thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>`;
+  MC.forEach(c=>{
+    h+=`<tr>
+      <td><div class="tdc"><div class="tdc-dot" style="background:${c.color}"></div>
+      <div><div class="tdc-n">${c.short}</div><div class="tdc-s">${c.cat}</div></div></div></td>
+      <td><span class="badge ${c.status==='ACTIVE'?'ba':'bp'}">${c.status==='ACTIVE'?'ativa':'pausada'}</span></td>
+      <td>${fBRL(c.spend)}</td><td>${fN(c.imp)}</td><td>${fN(c.reach)}</td>
+      <td>${fR(c.freq)}</td><td>${fBRL(c.cpm)}</td><td>${fP(c.ctr)}</td>
+      <td>${fBRL(c.cpc)}</td><td>${fN(c.clicks)}</td><td>${fN(c.lc)}</td><td>${fBRL(c.cplc)}</td>
+    </tr>`;
+  });
+  document.getElementById('mTable').innerHTML=h+'</tbody>';
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+gKpis();gSidebar();gPills();gLeg();buildGChart();gTable();
+mKpis();mSidebar();mPills();buildMChart();mTable();
+</script>
+</body>
+</html>
